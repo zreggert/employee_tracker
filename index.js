@@ -17,6 +17,7 @@ const manageOffice = () => {
       type: 'list',
       message: 'What would you like to do?',
       choices: [
+        'View All Employees',
         'Add Department',
         'Add Employee',
         'Add Roles'
@@ -24,7 +25,9 @@ const manageOffice = () => {
     }
   ])
   .then((res) => {
-    if (res.action === 'Add Department') {
+    if (res.action === 'View All Employees') {
+      viewAll();
+    } else if (res.action === 'Add Department') {
       addDepartment();
     } else if (res.action === 'Add Employee') {
       addEmployee();
@@ -32,6 +35,22 @@ const manageOffice = () => {
   })
 }
 
+// View Data
+const viewAll = () => {
+  connection.query(`SELECT employee.id, employee.first_name, employee.last_name, role.title, departments.department, salary, employee.manager_id 
+  FROM employee
+  LEFT JOIN role
+  ON employee.role_id = role.id
+  LEFT JOIN departments
+  ON role.department_id = departments.id`, 
+  (err, res) => {
+    if (err) throw err;
+    console.table(res);
+  }
+  )
+}
+
+// Adding Data
 const addDepartment = () => {
   inquirer.prompt([
     {
@@ -67,20 +86,39 @@ const addEmployee = () => {
       message: "What is the employee's last name?"
     },
     {
-      name: 'roleId',
-      type: 'input',
-      message: "What is the employee's first name?"
+      name: 'role',
+      type: 'list',
+      message: "What is the employee's title?",
+      choices: [
+        'Manager',
+        'Assistant to the Manager',
+        'Lead Sales Associate',
+        'Sales Associate',
+        'Lead Accountant',
+        'Accountant',
+        'Quality Inspector',
+        'Supply Chain Analyst',
+        'HR Associate',
+        'Customer Service Agent',
+        'Receptionist'
+      ]
     },
   ])
-  .then((resAddDep) => {
+  .then((resAddEmp) => {
+    var roleId;
+    if (resAddEmp.role === "Manager") {
+      roleId === 1
+    };
     connection.query(
-      'INSERT INTO department SET ?',
+      'INSERT INTO employee SET ?',
       {
-        name: resAddDep.departmentName,
+        first_name: resAddEmp.firstName,
+        last_name: resAddEmp.lastName,
+        role_id: roleId
       },
       (err) => {
         if (err) throw err;
-        console.log(`The ${resAddDep.departmentName} department has been added.`)
+        console.log(`${resAddEmp.firstName} ${resAddEmp.lastName}has been added.`)
       }
     );
   });
