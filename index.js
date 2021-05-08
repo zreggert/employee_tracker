@@ -10,7 +10,23 @@ const connection = mysql.createConnection({
     database: "employee_db",
   });
 
-  
+// Array of roles and function to create that array
+const rolesArray = [];
+const roleOptions = () => {
+  connection.query(`SELECT * FROM role`,
+  (err, res) => {
+    if (err) throw err;
+    res.forEach((role) => {
+      rolesArray.push({
+        value: role.id, 
+        name: role.title
+      })
+    });
+  })
+  return rolesArray;
+};
+
+
 const manageOffice = () => {
   inquirer.prompt([
     {
@@ -30,6 +46,10 @@ const manageOffice = () => {
   .then((res) => {
     if (res.action === 'View All Employees') {
       viewAll();
+    } else if (res.action === 'View Employees by Department') {
+      viewByDep();
+    } else if (res.action === 'View Employees by Roles') {
+      viewByRole();
     } else if (res.action === 'Add Department') {
       addDepartment();
     } else if (res.action === 'Add Employee') {
@@ -55,9 +75,30 @@ const viewAll = () => {
   )
 };
 
-const viewByRole = () => {
-  
-}
+function viewByRole() {
+  inquirer.prompt([
+    {
+      name: 'roles',
+      type: 'list',
+      choices: roleOptions(),
+      message: "What role do you want to search?"
+    }
+  ])
+  .then((res) => {
+    connection.query(`SELECT employee.first_name, employee.last_name, role.title, employee.manager_id
+    FROM employee 
+    Left JOIN role
+    ON employee.role_id = role.id
+    WHERE role_id = ?`,
+    [`${res.role}`],
+    (err, res) => {
+      if (err) throw err;
+      console.table(res);
+    });
+  });
+};
+
+const viewByDep = () =>{}
 
 // Adding Data
 const addDepartment = () => {
@@ -83,20 +124,6 @@ const addDepartment = () => {
 };
 
 const addEmployee = () => {
-  const rolesArray = [];
-  const roleOptions = () => {
-    connection.query(`SELECT * FROM role`,
-    (err, res) => {
-      if (err) throw err;
-      res.forEach((role) => {
-        rolesArray.push({
-          value: role.id, 
-          name: role.title
-        })
-      });
-    })
-    return rolesArray;
-  };
   inquirer.prompt([
     {
       name: 'firstName',
