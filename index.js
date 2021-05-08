@@ -34,6 +34,8 @@ const manageOffice = () => {
       addDepartment();
     } else if (res.action === 'Add Employee') {
       addEmployee();
+    } else if (res.action === 'Add Roles') {
+      addRole();
     }
   })
 }
@@ -51,6 +53,10 @@ const viewAll = () => {
     console.table(res);
   }
   )
+};
+
+const viewByRole = () => {
+  
 }
 
 // Adding Data
@@ -76,19 +82,21 @@ const addDepartment = () => {
   });
 };
 
-const rolesArray = [];
-const roleOptions = () => {
-  connection.query(`SELECT * FROM role`,
-  (err, res) => {
-    if (err) throw err;
-    res.forEach((role) => {
-      rolesArray.push(role.title);
-    });
-  })
-  return rolesArray;
-}
-
 const addEmployee = () => {
+  const rolesArray = [];
+  const roleOptions = () => {
+    connection.query(`SELECT * FROM role`,
+    (err, res) => {
+      if (err) throw err;
+      res.forEach((role) => {
+        rolesArray.push({
+          value: role.id, 
+          name: role.title
+        })
+      });
+    })
+    return rolesArray;
+  };
   inquirer.prompt([
     {
       name: 'firstName',
@@ -108,13 +116,6 @@ const addEmployee = () => {
     }
   ])
   .then((resAddEmp) => {
-    // var roleId;
-    // connection.query(`SELECT * FROM role`,
-    // (err, res) => {
-    //   if (err) throw err;
-
-    // }
-    // )
     connection.query(
       'INSERT INTO employee SET ?',
       {
@@ -125,11 +126,61 @@ const addEmployee = () => {
       (err) => {
         if (err) throw err;
         console.log(`${resAddEmp.firstName} ${resAddEmp.lastName} has been added.`)
+        manageOffice();
       }
     );
   });
 };
 
+const addRole = () => {
+  const depArray = [];
+  const departmentOptions = () => {
+    connection.query(`SELECT * FROM departments`,
+    (err, res) => {
+      if (err) throw err;
+      res.forEach((dep) => {
+        depArray.push({
+          value: dep.id, 
+          name: dep.department
+        })
+      });
+    })
+    return depArray;
+  };
+  inquirer.prompt([
+    {
+      name: 'title',
+      type: 'input',
+      message: 'What role would you like to add?'
+    },
+    {
+      name: 'salary',
+      type: 'input',
+      message: 'What is the starting salary for this position?'
+    },
+    {
+      name: 'department',
+      type: 'list',
+      choices: departmentOptions(),
+      message: 'In what department is this position?'
+    }
+  ])
+  .then((resAddRole) => {
+    connection.query(
+      'INSERT INTO role SET ?',
+      {
+        title: resAddRole.title,
+        salary: resAddRole.salary,
+        department_id: resAddRole.department
+      },
+      (err) => {
+        if (err) throw err;
+        console.log(`Position ${resAddRole.title} has been added.`)
+        manageOffice();
+      }
+    );
+  });
+};
 
 connection.connect(function(err) {
   if (err) throw err;
