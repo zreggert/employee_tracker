@@ -9,6 +9,7 @@ const connection = mysql.createConnection({
     password: "",
     database: "employee_db",
   });
+
   
 const manageOffice = () => {
   inquirer.prompt([
@@ -18,6 +19,8 @@ const manageOffice = () => {
       message: 'What would you like to do?',
       choices: [
         'View All Employees',
+        'View Employess by Department',
+        'View Employees by Roles',
         'Add Department',
         'Add Employee',
         'Add Roles'
@@ -73,6 +76,18 @@ const addDepartment = () => {
   });
 };
 
+const rolesArray = [];
+const roleOptions = () => {
+  connection.query(`SELECT * FROM role`,
+  (err, res) => {
+    if (err) throw err;
+    res.forEach((role) => {
+      rolesArray.push(role.title);
+    });
+  })
+  return rolesArray;
+}
+
 const addEmployee = () => {
   inquirer.prompt([
     {
@@ -88,43 +103,34 @@ const addEmployee = () => {
     {
       name: 'role',
       type: 'list',
-      message: "What is the employee's title?",
-      choices: [
-        'Manager',
-        'Assistant to the Manager',
-        'Lead Sales Associate',
-        'Sales Associate',
-        'Lead Accountant',
-        'Accountant',
-        'Quality Inspector',
-        'Supply Chain Analyst',
-        'HR Associate',
-        'Customer Service Agent',
-        'Receptionist'
-      ]
-    },
+      choices: roleOptions(),
+      message: "What is the employee's title?"
+    }
   ])
   .then((resAddEmp) => {
-    var roleId;
-    if (resAddEmp.role === "Manager") {
-      roleId === 1
-    };
+    // var roleId;
+    // connection.query(`SELECT * FROM role`,
+    // (err, res) => {
+    //   if (err) throw err;
+
+    // }
+    // )
     connection.query(
       'INSERT INTO employee SET ?',
       {
         first_name: resAddEmp.firstName,
         last_name: resAddEmp.lastName,
-        role_id: roleId
+        role_id: resAddEmp.role
       },
       (err) => {
         if (err) throw err;
-        console.log(`${resAddEmp.firstName} ${resAddEmp.lastName}has been added.`)
+        console.log(`${resAddEmp.firstName} ${resAddEmp.lastName} has been added.`)
       }
     );
   });
 };
 
-  
+
 connection.connect(function(err) {
   if (err) throw err;
   console.log("Connected!");
