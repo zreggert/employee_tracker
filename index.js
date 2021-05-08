@@ -26,8 +26,25 @@ const roleOptions = () => {
   return rolesArray;
 };
 
+// Array for departments array and function to create it
+const depArray = [];
+const departmentOptions = () => {
+  connection.query(`SELECT * FROM departments`,
+  (err, res) => {
+    if (err) throw err;
+    res.forEach((dep) => {
+      depArray.push({
+        value: dep.id, 
+        name: dep.department
+      })
+    });
+  })
+  return depArray;
+};
 
 const manageOffice = () => {
+  roleOptions();
+  departmentOptions();
   inquirer.prompt([
     {
       name: 'action',
@@ -35,7 +52,7 @@ const manageOffice = () => {
       message: 'What would you like to do?',
       choices: [
         'View All Employees',
-        'View Employess by Department',
+        'View Employees by Department',
         'View Employees by Roles',
         'Add Department',
         'Add Employee',
@@ -58,11 +75,11 @@ const manageOffice = () => {
       addRole();
     }
   })
-}
+};
 
 // View Data
 const viewAll = () => {
-  connection.query(`SELECT employee.id, employee.first_name, employee.last_name, role.title, departments.department, salary, employee.manager_id 
+  connection.query(`SELECT employee.id, employee.first_name, employee.last_name, role.title, departments.department, salary
   FROM employee
   LEFT JOIN role
   ON employee.role_id = role.id
@@ -71,34 +88,62 @@ const viewAll = () => {
   (err, res) => {
     if (err) throw err;
     console.table(res);
+    manageOffice();
   }
   )
 };
 
-function viewByRole() {
+const viewByRole = () => {
   inquirer.prompt([
     {
-      name: 'roles',
+      name: 'role',
       type: 'list',
-      choices: roleOptions(),
+      choices: rolesArray,
       message: "What role do you want to search?"
     }
   ])
   .then((res) => {
-    connection.query(`SELECT employee.first_name, employee.last_name, role.title, employee.manager_id
+    connection.query(`SELECT employee.first_name, employee.last_name, role.title
     FROM employee 
-    Left JOIN role
+    LEFT JOIN role
     ON employee.role_id = role.id
+    LEFT JOIN departments
+    ON role.department_id = departments.id
     WHERE role_id = ?`,
     [`${res.role}`],
     (err, res) => {
       if (err) throw err;
       console.table(res);
+      manageOffice();
     });
   });
 };
 
-const viewByDep = () =>{}
+const viewByDep = () =>{
+  inquirer.prompt([
+    {
+      name: 'department',
+      type: 'list',
+      choices: depArray,
+      message: "What department do you want to search?"
+    }
+  ])
+  .then((res) => {
+    connection.query(`SELECT employee.first_name, employee.last_name, role.title
+    FROM employee
+    RIGHT JOIN role
+    ON employee.role_id = role.id
+    RIGHT JOIN departments
+    ON role.department_id = departments.id
+    WHERE department_id = ?`,
+    [`${res.department}`],
+    (err, res) => {
+      if (err) throw err ;
+      console.table(res);
+      manageOffice();   
+    });
+  });
+};
 
 // Adding Data
 const addDepartment = () => {
@@ -111,13 +156,14 @@ const addDepartment = () => {
   ])
   .then((resAddDep) => {
     connection.query(
-      'INSERT INTO department SET ?',
+      'INSERT INTO departments SET ?',
       {
-        name: resAddDep.departmentName,
+        department: resAddDep.departmentName,
       },
       (err) => {
         if (err) throw err;
         console.log(`The ${resAddDep.departmentName} department has been added.`)
+        manageOffice();
       }
     );
   });
@@ -138,7 +184,7 @@ const addEmployee = () => {
     {
       name: 'role',
       type: 'list',
-      choices: roleOptions(),
+      choices: rolesArray,
       message: "What is the employee's title?"
     }
   ])
@@ -160,20 +206,6 @@ const addEmployee = () => {
 };
 
 const addRole = () => {
-  const depArray = [];
-  const departmentOptions = () => {
-    connection.query(`SELECT * FROM departments`,
-    (err, res) => {
-      if (err) throw err;
-      res.forEach((dep) => {
-        depArray.push({
-          value: dep.id, 
-          name: dep.department
-        })
-      });
-    })
-    return depArray;
-  };
   inquirer.prompt([
     {
       name: 'title',
@@ -188,7 +220,7 @@ const addRole = () => {
     {
       name: 'department',
       type: 'list',
-      choices: departmentOptions(),
+      choices: depArray,
       message: 'In what department is this position?'
     }
   ])
