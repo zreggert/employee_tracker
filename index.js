@@ -98,8 +98,10 @@ const manageOffice = () => {
 
 // View Data
 const viewAll = () => {
-  connection.query(`SELECT employee.id, employee.first_name, employee.last_name, role.title, departments.department, salary
+  connection.query(`SELECT employee.id, employee.first_name, employee.last_name, role.title, departments.department, salary, CONCAT(m.first_name, ' ', m.last_name) AS manager
   FROM employee
+  LEFT JOIN employee as m
+  ON m.id = employee.manager_id
   LEFT JOIN role
   ON employee.role_id = role.id
   LEFT JOIN departments
