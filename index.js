@@ -10,6 +10,7 @@ const connection = mysql.createConnection({
     database: "employee_db",
   });
 
+// Arrays need 
 // Array of roles and function to create that array
 const rolesArray = [];
 const roleOptions = () => {
@@ -42,9 +43,24 @@ const departmentOptions = () => {
   return depArray;
 };
 
+//Array for employees and function to create it
+const employeeArray = [];
+const employeeOptions = () => {
+  connection.query(`SELECT * FROM employee`,
+  (err, res) => {
+    if (err) throw err;
+    res.forEach((employee) => {
+      employeeArray.push({
+        value: employee.id, 
+        name: `${employee.first_name} ${employee.last_name}`
+      })
+    });
+  })
+  return employeeArray;
+}
+
+// function to select action to take
 const manageOffice = () => {
-  roleOptions();
-  departmentOptions();
   inquirer.prompt([
     {
       name: 'action',
@@ -56,7 +72,8 @@ const manageOffice = () => {
         'View Employees by Roles',
         'Add Department',
         'Add Employee',
-        'Add Roles'
+        'Add Roles',
+        'Update Employee Role'
       ]
     }
   ])
@@ -73,6 +90,8 @@ const manageOffice = () => {
       addEmployee();
     } else if (res.action === 'Add Roles') {
       addRole();
+    } else if (res.action === 'Update Employee Role') {
+      updateEmployee();
     }
   })
 };
@@ -146,6 +165,7 @@ const viewByDep = () =>{
 };
 
 // Adding Data
+// function to add department
 const addDepartment = () => {
   inquirer.prompt([
     {
@@ -169,6 +189,7 @@ const addDepartment = () => {
   });
 };
 
+// function to add an employee
 const addEmployee = () => {
   inquirer.prompt([
     {
@@ -205,6 +226,7 @@ const addEmployee = () => {
   });
 };
 
+// function to add a role
 const addRole = () => {
   inquirer.prompt([
     {
@@ -241,8 +263,44 @@ const addRole = () => {
   });
 };
 
+// updating employee role
+const updateEmployee = () => {
+  inquirer.prompt([
+    {
+      name: 'employee',
+      type: 'list',
+      choices: employeeArray,
+      message: 'Which employee do you want to update?'
+    },
+    {
+      name: 'update',
+      type: 'list',
+      choices: rolesArray,
+      message: 'What is their new role?'
+    }
+  ])
+  .then((res) => {
+    
+    connection.query(`UPDATE employee SET role_id = ${res.update} WHERE id = ${res.employee}`,
+    (err) => {
+      if (err) throw err;
+      connection.query(`SELECT first_name, last_name
+      FROM employee
+      WHERE id = ${res.employee}`,
+      (err, response) => {
+        if(err) throw err;
+        console.log(`${response[0].first_name} ${response[0].last_name} has been updated.`);
+        manageOffice();
+      })
+    })
+  });
+};
+
 connection.connect(function(err) {
   if (err) throw err;
   console.log("Connected!");
   manageOffice();
+  roleOptions();
+  departmentOptions();
+  employeeOptions();
 });
