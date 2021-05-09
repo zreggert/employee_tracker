@@ -57,7 +57,27 @@ const employeeOptions = () => {
     });
   })
   return employeeArray;
-}
+};
+
+// Array of managers and function to create it
+// const managerArray = [];
+// const managerOptions = () => {
+//   connection.query(`SELECT employee.first_name, employee.last, role.tilte 
+//   FROM employee
+//   LEFT JOIN role
+//   on employee.role_id = role.id
+//   WHERE role_id = 1`,
+//   (err, res) => {
+//     if (err) throw err;
+//     res.forEach((employee) => {
+//       managerArray.push({
+//         value: employee.role_id,
+//         name: `${employee.first_name} ${employee.last_name}`
+//       })
+//     });
+//   })
+//   return managerArray;
+// };
 
 // function to select action to take
 const manageOffice = () => {
@@ -73,7 +93,8 @@ const manageOffice = () => {
         'Add Department',
         'Add Employee',
         'Add Roles',
-        'Update Employee Role'
+        'Update Employee Role',
+        'Delete Employee'
       ]
     }
   ])
@@ -92,6 +113,8 @@ const manageOffice = () => {
       addRole();
     } else if (res.action === 'Update Employee Role') {
       updateEmployee();
+    }else if (res.action === 'Delete Employee') {
+      deleteEmployee();
     }
   })
 };
@@ -209,7 +232,13 @@ const addEmployee = () => {
       type: 'list',
       choices: rolesArray,
       message: "What is the employee's title?"
-    }
+    },
+    // {
+    //   name: 'managerID',
+    //   type: 'list',
+    //   choices: managerArray,
+    //   message: 'How is there manager?'
+    // }
   ])
   .then((resAddEmp) => {
     connection.query(
@@ -217,7 +246,8 @@ const addEmployee = () => {
       {
         first_name: resAddEmp.firstName,
         last_name: resAddEmp.lastName,
-        role_id: resAddEmp.role
+        role_id: resAddEmp.role,
+        // manager_id: resAddEmp.managerID
       },
       (err) => {
         if (err) throw err;
@@ -282,7 +312,6 @@ const updateEmployee = () => {
     }
   ])
   .then((res) => {
-    
     connection.query(`UPDATE employee SET role_id = ${res.update} WHERE id = ${res.employee}`,
     (err) => {
       if (err) throw err;
@@ -298,6 +327,25 @@ const updateEmployee = () => {
   });
 };
 
+const deleteEmployee = () => {
+  inquirer.prompt([
+    {
+      name: 'employee',
+      type: 'list',
+      choices: employeeArray,
+      message: "Which employee do you want to delete?"
+    }
+  ])
+  .then((res) => {
+    connection.query(`DELETE FROM employee WHERE id = ${res.employee}`,
+    (err) => {
+      if (err) throw err;
+      console.log("Employee deleted.")
+      manageOffice();
+    })
+  })
+}
+
 connection.connect(function(err) {
   if (err) throw err;
   console.log("Connected!");
@@ -305,4 +353,5 @@ connection.connect(function(err) {
   roleOptions();
   departmentOptions();
   employeeOptions();
+  // managerOptions();
 });
