@@ -47,3 +47,5 @@
   Also please check out this application's repo and my other work at:
   https://github.com/zreggert
 
+![screenshot of application](./assets/employee-tracker.png)
+![video walkthrough](./assets/employeetracker-walkthrough.webm)

@@ -1,19 +1,14 @@
-const mysql = require('mysql');
 const inquirer = require('inquirer');
 const cTable = require('console.table');
 
-const connection = mysql.createConnection({
-    host: "localhost",
-    port: "3306",
-    user: "root",
-    password: "",
-    database: "employee_db",
-  });
+
+const { connection } = require('./config/connection');
+
 
 // Arrays need 
 // Array of roles and function to create that array
-const rolesArray = [];
 const roleOptions = () => {
+  var rolesArray = [];
   connection.query(`SELECT * FROM role`,
   (err, res) => {
     if (err) throw err;
@@ -28,8 +23,9 @@ const roleOptions = () => {
 };
 
 // Array for departments array and function to create it
-const depArray = [];
+
 const departmentOptions = () => {
+  var depArray = [];
   connection.query(`SELECT * FROM departments`,
   (err, res) => {
     if (err) throw err;
@@ -38,14 +34,14 @@ const departmentOptions = () => {
         value: dep.id, 
         name: dep.department
       })
-    });
+    })
   })
   return depArray;
 };
 
 //Array for employees and function to create it
-const employeeArray = [];
 const employeeOptions = () => {
+  var employeeArray = [];
   connection.query(`SELECT * FROM employee`,
   (err, res) => {
     if (err) throw err;
@@ -59,25 +55,7 @@ const employeeOptions = () => {
   return employeeArray;
 };
 
-// Array of managers and function to create it
-// const managerArray = [];
-// const managerOptions = () => {
-//   connection.query(`SELECT employee.first_name, employee.last, role.tilte 
-//   FROM employee
-//   LEFT JOIN role
-//   on employee.role_id = role.id
-//   WHERE role_id = 1`,
-//   (err, res) => {
-//     if (err) throw err;
-//     res.forEach((employee) => {
-//       managerArray.push({
-//         value: employee.role_id,
-//         name: `${employee.first_name} ${employee.last_name}`
-//       })
-//     });
-//   })
-//   return managerArray;
-// };
+
 
 // function to select action to take
 const manageOffice = () => {
@@ -138,11 +116,17 @@ const viewAll = () => {
 };
 
 const viewByRole = () => {
+
   inquirer.prompt([
+    {
+      type: 'confirm',
+      message: "You are searching employees based on role.",
+      name: 'confirm'
+    },
     {
       name: 'role',
       type: 'list',
-      choices: rolesArray,
+      choices: roleOptions(),
       message: "What role do you want to search?"
     }
   ])
@@ -163,12 +147,17 @@ const viewByRole = () => {
   });
 };
 
-const viewByDep = () =>{
+const viewByDep = () => {
   inquirer.prompt([
+    {
+      type: 'confirm',
+      message: "You are searching employees based on department.",
+      name: 'confirm'
+    },
     {
       name: 'department',
       type: 'list',
-      choices: depArray,
+      choices: departmentOptions(),
       message: "What department do you want to search?"
     }
   ])
@@ -230,7 +219,7 @@ const addEmployee = () => {
     {
       name: 'role',
       type: 'list',
-      choices: rolesArray,
+      choices: roleOptions(),
       message: "What is the employee's title?"
     },
     // {
@@ -274,7 +263,7 @@ const addRole = () => {
     {
       name: 'department',
       type: 'list',
-      choices: depArray,
+      choices: departmentOptions(),
       message: 'In what department is this position?'
     }
   ])
@@ -299,15 +288,20 @@ const addRole = () => {
 const updateEmployee = () => {
   inquirer.prompt([
     {
+      type: 'confirm',
+      message: "Would you like to change an employees role?",
+      name: 'confirm'
+    },
+    {
       name: 'employee',
       type: 'list',
-      choices: employeeArray,
+      choices: employeeOptions(),
       message: 'Which employee do you want to update?'
     },
     {
       name: 'update',
       type: 'list',
-      choices: rolesArray,
+      choices: roleOptions(),
       message: 'What is their new role?'
     }
   ])
@@ -330,9 +324,14 @@ const updateEmployee = () => {
 const deleteEmployee = () => {
   inquirer.prompt([
     {
+      type: 'confirm',
+      message: "Do you want to delete an employee?",
+      name: 'confirm'
+    },
+    {
       name: 'employee',
       type: 'list',
-      choices: employeeArray,
+      choices: employeeOptions(),
       message: "Which employee do you want to delete?"
     }
   ])
@@ -350,8 +349,18 @@ connection.connect(function(err) {
   if (err) throw err;
   console.log("Connected!");
   manageOffice();
-  roleOptions();
-  departmentOptions();
-  employeeOptions();
+  // roleOptions();
+  // departmentOptions();
+  // employeeOptions();
   // managerOptions();
 });
+
+
+// const start = () => {
+//   manageOffice();
+//   roleOptions();
+//   departmentOptions();
+//   employeeOptions();
+// }
+
+// start();
