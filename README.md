@@ -48,4 +48,4 @@
   https://github.com/zreggert
 
 ![screenshot of application](./assets/employee-tracker.png)
-![video walkthrough](./assets/employeetracker-walkthrough.webm)
+![video walkthrough](./assets/employeetracker-walkthrough.gif)
